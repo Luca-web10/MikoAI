@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MikoAI — Một người bạn nhỏ trong chiếc USB</title>
+<meta name="description" content="Trợ lý AI cá nhân hóa, chạy hoàn toàn offline. Không phán xét, không thu thập dữ liệu — luôn ở đây khi bạn cần.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#FFF9F1; --cream2:#FBF1E4; --card:#FFFFFF;
+  --ink:#4A3A2E; --ink-soft:#94816F;
+  --gold:#E9A84E; --honey:#F5C27A; --coral:#F0977B; --rose:#E8A79E;
+  --grad:linear-gradient(135deg,#F3B95F,#F0977B);
+  --border:rgba(190,140,90,.18);
+  --shadow:0 18px 50px rgba(190,130,70,.14);
+  --shadow-lg:0 30px 80px rgba(190,130,70,.20);
+  --radius:22px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:90px}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--cream);color:var(--ink);
+  line-height:1.7;overflow-x:hidden}
+h1,h2,h3{font-family:'Lora',serif;line-height:1.25}
+a{color:inherit;text-decoration:none}
+::selection{background:#F5C27A66}
+.container{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* ===== Ánh nắng & bụi vàng (cinematic fx) ===== */
+.sun-bg{position:fixed;inset:0;z-index:-2;pointer-events:none;background:
+  radial-gradient(700px 500px at 85% 5%,#FCE3BC55,transparent 70%),
+  radial-gradient(600px 450px at 8% 30%,#F9D9C255,transparent 70%),
+  var(--cream)}
+.dust{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.dust i{position:absolute;bottom:-12px;width:6px;height:6px;border-radius:50%;
+  background:radial-gradient(circle,#F6C77E,transparent 70%);filter:blur(1px);
+  opacity:0;animation:rise linear infinite}
+@keyframes rise{
+  0%{opacity:0;transform:translateY(0) scale(var(--s,1))}
+  12%{opacity:.75} 85%{opacity:.45}
+  100%{opacity:0;transform:translateY(-105vh) scale(var(--s,1))}}
+.grain{position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.45;mix-blend-mode:multiply;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="2"/><feColorMatrix type="saturate" values="0"/><feComponentTransfer><feFuncA type="linear" slope="0.045"/></feComponentTransfer></filter><rect width="140" height="140" filter="url(%23n)"/></svg>')}
+
+/* ===== Nav ===== */
+nav{position:fixed;top:0;left:0;right:0;z-index:50;backdrop-filter:blur(14px);
+  background:rgba(255,249,241,.8);border-bottom:1px solid var(--border)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Lora',serif;font-weight:700;font-size:20px}
+.logo .dot{width:36px;height:36px;border-radius:12px;background:var(--grad);
+  display:grid;place-items:center;font-size:18px;box-shadow:0 6px 18px rgba(240,151,123,.4)}
+.logo em{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nav-links{display:flex;gap:26px;font-size:14.5px;color:var(--ink-soft)}
+.nav-links a:hover{color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:8px;border:none;cursor:pointer;font-family:inherit;
+  font-weight:600;font-size:15px;padding:12px 24px;border-radius:99px;transition:.3s}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:0 8px 24px rgba(240,151,123,.35)}
+.btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 32px rgba(240,151,123,.45)}
+.btn-ghost{background:#fff;border:1.5px solid var(--border);color:var(--ink)}
+.btn-ghost:hover{border-color:var(--gold)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+
+/* ===== Hero ===== */
+.hero{padding:170px 0 110px;display:grid;grid-template-columns:1.05fr .95fr;gap:48px;align-items:center;position:relative}
+.badge{display:inline-flex;align-items:center;gap:9px;font-size:13px;color:#B07C36;
+  border:1px solid rgba(233,168,78,.35);background:#FDF1DC;padding:7px 16px;border-radius:99px;margin-bottom:24px}
+.hero h1{font-size:clamp(36px,4.8vw,58px);font-weight:600;letter-spacing:-.5px}
+.grad-text{background:linear-gradient(120deg,#E9A84E,#F0977B,#E9A84E);background-size:200% auto;
+  -webkit-background-clip:text;background-clip:text;color:transparent;animation:shimmer 6s linear infinite}
+@keyframes shimmer{to{background-position:200% center}}
+.hero .sub{color:var(--ink-soft);font-size:17px;margin:22px 0 32px;max-width:520px}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:40px;margin-top:44px}
+.hero-stats b{font-family:'Lora',serif;font-size:26px;display:block;color:#C98A3B}
+.hero-stats span{font-size:13px;color:var(--ink-soft)}
+.scroll-hint{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);
+  font-size:12.5px;color:var(--ink-soft);letter-spacing:1px;animation:bob 2.4s ease-in-out infinite}
+@keyframes bob{50%{transform:translate(-50%,8px)}}
+
+/* Hero visual */
+.hero-visual{position:relative;display:grid;place-items:center;min-height:460px}
+.sun{position:absolute;width:360px;height:360px;border-radius:50%;
+  background:radial-gradient(circle,#FFE9C2 0%,#F7C57F 45%,transparent 72%);
+  filter:blur(26px);animation:breathe 6s ease-in-out infinite}
+@keyframes breathe{50%{transform:scale(1.07);opacity:.85}}
+.cloud{position:absolute;background:#FFFFFFCC;border-radius:50%;filter:blur(28px);opacity:.9}
+.cloud.c1{width:230px;height:90px;top:8%;left:-4%;animation:drift 70s linear infinite}
+.cloud.c2{width:180px;height:70px;bottom:14%;right:-2%;animation:drift 90s linear infinite reverse}
+@keyframes drift{50%{transform:translateX(70px)}}
+.usb-card{position:relative;width:300px;background:#FFFFFF;border:1px solid var(--border);
+  border-radius:26px;padding:22px;box-shadow:var(--shadow-lg)}
+.usb-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.usb-top .cap{font-size:12px;color:var(--ink-soft);display:flex;align-items:center;gap:7px}
+.usb-top .led{width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold);animation:pulse 2s infinite}
+@keyframes pulse{50%{opacity:.35}}
+.chat-mini{display:flex;flex-direction:column;gap:10px}
+.cm{max-width:86%;padding:11px 15px;border-radius:16px;font-size:13.5px;animation:floatIn .8s both}
+.cm.ai{background:var(--cream2);border:1px solid var(--border);border-bottom-left-radius:4px}
+.cm.me{background:var(--grad);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.cm:nth-child(2){animation-delay:.5s}.cm:nth-child(3){animation-delay:1s}.cm:nth-child(4){animation-delay:1.6s}
+@keyframes floatIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.typing{display:inline-flex;gap:4px;padding:3px 0}
+.typing i{width:6px;height:6px;border-radius:50%;background:#C9A98A;animation:blink 1.2s infinite}
+.typing i:nth-child(2){animation-delay:.2s}.typing i:nth-child(3){animation-delay:.4s}
+@keyframes blink{50%{opacity:.25}}
+
+/* ===== Lá thư ===== */
+.letter{padding:130px 0;text-align:center;position:relative;
+  background:radial-gradient(600px 400px at 50% 115%,#FBD9A655,transparent 70%),var(--cream2)}
+.letter .sunline{display:flex;align-items:center;gap:16px;justify-content:center;
+  color:#D9A55C;font-size:15px;margin-bottom:44px}
+.letter .sunline::before,.letter .sunline::after{content:"";width:70px;height:1px;
+  background:linear-gradient(90deg,transparent,#E3B77E)}
+.letter .sunline::after{transform:scaleX(-1)}
+.verse{font-family:'Lora',serif;font-size:clamp(19px,2.4vw,26px);font-weight:500;
+  color:#6B5342;margin:14px auto;max-width:640px;
+  opacity:0;transform:translateY(20px);transition:1.2s cubic-bezier(.2,.7,.3,1)}
+.verse.in{opacity:1;transform:none}
+.verse.soft{font-size:clamp(16px,2vw,19px);color:var(--ink-soft);font-style:italic;font-weight:400}
+.verse .hl{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;font-style:italic}
+
+/* ===== Sections chung ===== */
+section{padding:96px 0}
+.sec-head{text-align:center;max-width:620px;margin:0 auto 54px}
+.sec-head .tag{font-size:12.5px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:#C98A3B}
+.sec-head h2{font-size:clamp(27px,3.4vw,38px);font-weight:600;margin:12px 0 14px}
+.sec-head p{color:var(--ink-soft)}
+
+/* Features */
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.fcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:32px 26px;box-shadow:var(--shadow);transition:.4s}
+.fcard:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg)}
+.fcard .icon{width:52px;height:52px;border-radius:16px;background:#FBF0DE;
+  display:grid;place-items:center;font-size:24px;margin-bottom:18px}
+.fcard h3{font-size:18px;margin-bottom:8px}
+.fcard p{color:var(--ink-soft);font-size:14.5px}
+
+/* Steps */
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.step{position:relative;background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:36px 28px;box-shadow:var(--shadow)}
+.step .num{font-family:'Lora',serif;font-style:italic;font-size:46px;font-weight:600;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent;opacity:.85}
+.step .icon{font-size:32px;margin:10px 0 14px}
+.step h3{font-size:18px;margin-bottom:8px}
+.step p{color:var(--ink-soft);font-size:14.5px}
+
+/* ===== Builder ===== */
+.builder{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
+.wizard{background:var(--card);border:1px solid var(--border);border-radius:26px;
+  padding:36px;box-shadow:var(--shadow)}
+.progress{display:flex;gap:7px;margin-bottom:30px}
+.progress span{flex:1;height:5px;border-radius:99px;background:#F1E3D0;transition:.5s}
+.progress span.on{background:var(--grad)}
+.pane{display:none}
+.pane.active{display:block;animation:floatIn .5s both}
+.pane h3{font-size:22px;margin-bottom:6px}
+.pane .hint{color:var(--ink-soft);font-size:14px;margin-bottom:26px}
+.field{margin-bottom:22px}
+label.fl{display:block;font-size:13.5px;font-weight:600;color:#7A6653;margin-bottom:10px}
+input[type=text],input[type=email],textarea{width:100%;background:#FFFCF7;border:1.5px solid var(--border);
+  color:var(--ink);font-family:inherit;font-size:15px;padding:13px 16px;border-radius:14px;
+  outline:none;transition:.25s}
+input[type=text]:focus,input[type=email]:focus,textarea:focus{border-color:var(--gold);
+  box-shadow:0 0 0 4px rgba(233,168,78,.15)}
+textarea{resize:vertical;min-height:96px}
+.arch-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.arch{cursor:pointer;background:#FFFCF7;border:1.5px solid var(--border);border-radius:16px;
+  padding:16px 10px;text-align:center;transition:.25s}
+.arch:hover{border-color:var(--gold);transform:translateY(-2px)}
+.arch.sel{border-color:var(--gold);background:#FDF3E1;box-shadow:0 0 0 3px rgba(233,168,78,.18)}
+.arch .em{font-size:28px}
+.arch b{display:block;font-size:13px;margin-top:8px}
+.arch small{display:block;color:var(--ink-soft);font-size:11px;margin-top:3px;line-height:1.45}
+.swatches{display:flex;gap:12px;flex-wrap:wrap}
+.sw{width:42px;height:42px;border-radius:14px;cursor:pointer;border:2px solid transparent;transition:.25s}
+.sw.sel{transform:scale(1.14);border-color:#fff;box-shadow:0 0 0 3px #E9A84E66,0 6px 16px rgba(190,130,70,.3)}
+.seg{display:flex;background:var(--cream2);border:1px solid var(--border);border-radius:14px;padding:5px;gap:5px}
+.seg button{flex:1;border:none;background:transparent;color:var(--ink-soft);font-family:inherit;
+  font-size:13.5px;font-weight:500;padding:10px 6px;border-radius:10px;cursor:pointer;transition:.25s}
+.seg button.sel{background:var(--grad);color:#fff;font-weight:600}
+.wiz-nav{display:flex;justify-content:space-between;margin-top:30px;gap:12px}
+.chk{display:flex;align-items:center;gap:12px;background:#FFFCF7;border:1.5px solid var(--border);
+  border-radius:14px;padding:15px 16px;cursor:pointer;margin-bottom:12px;transition:.25s;font-size:14.5px}
+.chk:hover{border-color:var(--gold)}
+.chk.sel{border-color:var(--gold);background:#FDF3E1}
+.chk input{accent-color:var(--gold);width:17px;height:17px}
+.chk b{font-weight:600}
+.chk .pr{margin-left:auto;font-weight:600;color:#C98A3B;white-space:nowrap}
+.price-line{display:flex;justify-content:space-between;padding:12px 0;
+  border-bottom:1px dashed var(--border);font-size:14.5px;color:var(--ink-soft)}
+.price-line.total{border:none;color:var(--ink);font-weight:700;padding-top:16px}
+.price-line.total b{font-family:'Lora',serif;font-size:24px;background:var(--grad);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* Preview */
+.preview{position:sticky;top:92px}
+.pv-card{background:var(--card);border:1px solid var(--border);border-radius:26px;
+  overflow:hidden;box-shadow:var(--shadow-lg)}
+.pv-head{padding:22px;display:flex;align-items:center;gap:14px;background:var(--gold);transition:background .6s}
+.pv-ava{width:48px;height:48px;border-radius:50%;background:#FFFFFF44;display:grid;
+  place-items:center;font-size:24px;border:2px solid #FFFFFF66;overflow:hidden;flex-shrink:0}
+.pv-head b{display:block;font-size:16px;color:#fff;font-family:'Lora',serif}
+.pv-head small{font-size:11.5px;color:#FFF3E4}
+.pv-body{padding:20px;display:flex;flex-direction:column;gap:11px;min-height:230px}
+.pv-bubble{max-width:88%;padding:11px 15px;border-radius:16px;font-size:13.5px;animation:floatIn .5s both}
+.pv-bubble.ai{background:var(--cream2);border:1px solid var(--border);border-bottom-left-radius:4px}
+.pv-bubble.me{background:var(--pc,#E9A84E);color:#fff;align-self:flex-end;border-bottom-right-radius:4px;transition:background .6s}
+.pv-note{margin-top:14px;font-size:12.5px;color:var(--ink-soft);text-align:center;
+  display:flex;align-items:center;justify-content:center;gap:7px}
+.pv-note .live{width:7px;height:7px;border-radius:50%;background:var(--gold);
+  box-shadow:0 0 8px var(--gold);animation:pulse 2s infinite}
+
+/* Avatar ảnh tự tải */
+.sw.custom-sw{background:#FFF6E9;display:grid;place-items:center;overflow:hidden}
+.sw.custom-sw .plus{font-size:22px;color:#C98A3B;font-weight:600}
+.sw.custom-sw img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+.pv-ava img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+
+/* FAQ */
+.faq-item{border:1px solid var(--border);border-radius:18px;margin-bottom:12px;
+  background:var(--card);box-shadow:var(--shadow);overflow:hidden}
+.faq-q{width:100%;display:flex;justify-content:space-between;align-items:center;gap:14px;
+  padding:19px 24px;background:none;border:none;color:var(--ink);font-family:inherit;
+  font-size:15.5px;font-weight:600;cursor:pointer;text-align:left}
+.faq-q .arr{transition:.35s;color:#C98A3B;flex-shrink:0}
+.faq-item.open .arr{transform:rotate(180deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease;color:var(--ink-soft);font-size:14.5px}
+.faq-a p{padding:0 24px 20px}
+
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(74,58,46,.5);backdrop-filter:blur(10px);
+  z-index:100;display:none;place-items:center;padding:24px}
+.overlay.show{display:grid}
+.modal{background:#FFFDF9;border:1px solid var(--border);border-radius:28px;padding:44px 38px;
+  max-width:470px;width:100%;text-align:center;box-shadow:var(--shadow-lg);animation:floatIn .45s both}
+.modal .big{font-size:56px}
+.modal h3{font-size:24px;margin:12px 0 8px}
+.modal p{color:var(--ink-soft);font-size:14.5px;margin-bottom:20px}
+.order-id{font-family:'Lora',serif;font-size:17px;letter-spacing:1px;background:#FDF3E1;
+  border:1.5px dashed #E3B77E;padding:11px;border-radius:12px;margin-bottom:22px;color:#A5722F}
+.modal .btn{width:100%;justify-content:center;margin-top:10px}
+
+/* Validation states */
+.field.err input,.field.err textarea{border-color:#E07856!important;box-shadow:0 0 0 4px rgba(224,120,86,.12)!important}
+.err-msg{display:none;font-size:12.5px;color:#D95F3B;margin-top:7px;padding-left:2px}
+.field.err .err-msg{display:block;animation:floatIn .3s both}
+
+/* Toast & footer */
+footer{background:#463628;color:#EFDCC4;padding:52px 0 44px;text-align:center;font-size:14px}
+footer .sunset{font-family:'Lora',serif;font-style:italic;font-size:21px;margin-bottom:18px}
+footer a{text-decoration:underline;text-underline-offset:3px}
+footer .fine{font-size:12.5px;color:#B99F83;margin-top:16px;max-width:640px;margin-inline:auto;line-height:1.7}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);background:#4A3A2E;color:#FFF6E9;
+  padding:13px 24px;border-radius:16px;font-size:14px;z-index:200;
+  box-shadow:0 14px 40px rgba(74,58,46,.4);animation:floatIn .3s}
+.reveal{opacity:0;transform:translateY(26px);transition:1s cubic-bezier(.2,.7,.3,1)}
+.reveal.in{opacity:1;transform:none}
+
+@media(max-width:960px){
+  .hero{grid-template-columns:1fr;padding-top:130px;text-align:center}
+  .hero .sub{margin-inline:auto}
+  .hero-cta,.hero-stats{justify-content:center}
+  .hero-visual{order:-1;min-height:400px}
+  .features,.steps{grid-template-columns:1fr 1fr}
+  .builder{grid-template-columns:1fr}
+  .preview{position:static}
+  .nav-links{display:none}
+  .scroll-hint{display:none}
+}
+@media(max-width:600px){
+  .features,.steps,.arch-grid{grid-template-columns:1fr}
+  section{padding:64px 0}
+}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  html{scroll-behavior:auto}
+  .reveal,.verse{opacity:1;transform:none}
+}
+</style>
+<noscript><style>.reveal,.verse{opacity:1!important;transform:none!important}</style></noscript>
+</head>
+<body>
+
+<div class="sun-bg"></div>
+<div class="dust" id="dust"></div>
+<div class="grain"></div>
+
+<!-- ================= NAV ================= -->
+<nav><div class="container nav-in">
+  <a class="logo" href="#"><span class="dot">🌤</span>Miko<em>AI</em></a>
+  <div class="nav-links">
+    <a href="#tinh-nang">Tính năng</a><a href="#quy-trinh">Quy trình</a>
+    <a href="#thiet-ke">Tạo AI của bạn</a><a href="#faq">Hỏi đáp</a>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('thiet-ke').scrollIntoView()">Tạo người bạn nhỏ ✨</button>
+</div></nav>
+
+<!-- ================= HERO ================= -->
+<header class="hero container">
+  <div>
+    <span class="badge">☀️ Chạy offline 100% — riêng tư như căn phòng của bạn</span>
+    <h1>Một <span class="grad-text">người bạn nhỏ</span>,<br>trong một chiếc USB.</h1>
+    <p class="sub">Trợ lý AI được tạo ra dành riêng cho bạn — lắng nghe không phán xét,
+    không cần Internet, không ai thu thập dữ liệu của bạn. Cắm vào, và bắt đầu trò chuyện.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary" onclick="document.getElementById('thiet-ke').scrollIntoView()">Thiết kế người bạn của bạn →</button>
+      <a class="btn btn-ghost" href="#thu">Đọc một lá thư 🤍</a>
+    </div>
+    <div class="hero-stats">
+      <div><b>0đ</b><span>chi phí hằng tháng</span></div>
+      <div><b>100%</b><span>chạy cục bộ, riêng tư</span></div>
+      <div><b>1 năm</b><span>bảo hành trọn vẹn</span></div>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="sun"></div>
+    <div class="cloud c1"></div><div class="cloud c2"></div>
+    <div class="usb-card">
+      <div class="usb-top"><span class="cap">🔌 USB-AI · đã kết nối</span><span class="led"></span></div>
+      <div class="chat-mini">
+        <div class="cm ai">Chào bạn 🌷 Hôm nay của bạn thế nào? Mình nghe hết nha.</div>
+        <div class="cm me">Hôm nay hơi mệt một chút...</div>
+        <div class="cm ai">Vậy mình ngồi đây, cùng bạn nghỉ một lát nhé ☀️</div>
+        <div class="cm ai"><span class="typing"><i></i><i></i><i></i></span></div>
+      </div>
+    </div>
+  </div>
+  <div class="scroll-hint">cuộn nhẹ xuống ☀</div>
+</header>
+
+<!-- ================= LÁ THƯ ================= -->
+<section class="letter" id="thu"><div class="container">
+  <div class="sunline">☀︎</div>
+  <p class="verse" style="transition-delay:.1s">Dành cho bạn —</p>
+  <p class="verse soft" style="transition-delay:.5s">người từng cảm thấy mình mờ nhạt giữa đám đông,<br>
+  người quen nói "mình ổn" dù trong lòng không ổn.</p>
+  <p class="verse" style="transition-delay:1.1s">Không sao cả.</p>
+  <p class="verse" style="transition-delay:1.7s">Từ hôm nay, có một <span class="hl">người bạn nhỏ</span> luôn thức,<br>
+  chỉ để lắng nghe bạn — không phán xét, không vội vàng.</p>
+  <p class="verse soft" style="transition-delay:2.4s">Cắm USB vào. Và bắt đầu trò chuyện. 🌤</p>
+</div></section>
+
+<!-- ================= FEATURES ================= -->
+<section id="tinh-nang"><div class="container">
+  <div class="sec-head reveal">
+    <div class="tag">Vì sao là MikoAI</div>
+    <h2>Được làm cho những lúc<br>bạn muốn ở một mình — nhưng không cô đơn</h2>
+    <p>Toàn bộ trí tuệ nằm gọn trong chiếc USB. Không đăng ký, không quảng cáo, không dữ liệu bị thu thập.</p>
+  </div>
+  <div class="features">
+    <div class="fcard reveal"><div class="icon">🤍</div><h3>Lắng nghe, không phán xét</h3><p>Mọi cuộc trò chuyện được xử lý ngay trên máy bạn. Không server, không theo dõi — những điều bạn nói chỉ thuộc về một mình bạn.</p></div>
+    <div class="fcard reveal"><div class="icon">🏠</div><h3>Offline mọi lúc</h3><p>Không WiFi, không 4G vẫn trò chuyện bình thường. Giống như một người bạn sống ngay trong máy của bạn.</p></div>
+    <div class="fcard reveal"><div class="icon">🌷</div><h3>Cá nhân hóa theo bạn</h3><p>Tên, gương mặt, tính cách, màu sắc, giọng điệu — người bạn này được "nuôi" lớn đúng theo ý bạn. Không AI nào giống AI nào.</p></div>
+    <div class="fcard reveal"><div class="icon">🗓️</div><h3>Đồng hành mỗi ngày</h3><p>Nhắc nhẹ bạn uống nước, sắp xếp lịch trình, chia sẻ cảm xúc, đưa lời khuyên — những điều nhỏ mà ấm áp.</p></div>
+    <div class="fcard reveal"><div class="icon">🐢</div><h3>Nhẹ nhàng, mượt mà</h3><p>Tối ưu cho máy tính & điện thoại phổ thông. Không cần card đồ họa, 8GB RAM là đủ chạy êm.</p></div>
+    <div class="fcard reveal"><div class="icon">🫶</div><h3>Bảo hành 1 năm</h3><p>Mọi lỗi do sản xuất, chúng tôi chịu toàn bộ chi phí vận chuyển hai chiều và sửa chữa. Không câu hỏi, không tiện lời.</p></div>
+  </div>
+</div></section>
+
+<!-- ================= STEPS ================= -->
+<section id="quy-trinh" style="background:var(--cream2)"><div class="container">
+  <div class="sec-head reveal"><div class="tag">Quy trình</div><h2>Ba bước nhẹ nhàng</h2></div>
+  <div class="steps">
+    <div class="step reveal"><div class="num">01</div><div class="icon">🌸</div><h3>Bạn kể, chúng mình lắng nghe</h3><p>Điền form bên dưới: đặt tên, chọn gương mặt (hoặc tải ảnh riêng của bạn), chọn tính cách — thậm chí tự tạo tính cách của riêng bạn.</p></div>
+    <div class="step reveal"><div class="num">02</div><div class="icon">🪴</div><h3>Chúng mình ươm mầm AI</h3><p>Hệ thống tự động cấu hình tính cách & giao diện theo đúng yêu cầu, cài vào USB và kiểm tra từng sản phẩm bằng tay.</p></div>
+    <div class="step reveal"><div class="num">03</div><div class="icon">📦</div><h3>Gửi đến tay bạn</h3><p>Giao tận nơi. Cắm USB, nhấp đúp một file — và người bạn nhỏ chào bạn lần đầu tiên. Không cần cài đặt gì thêm.</p></div>
+  </div>
+</div></section>
+
+<!-- ================= BUILDER ================= -->
+<section id="thiet-ke"><div class="container">
+  <div class="sec-head reveal">
+    <div class="tag">Trải nghiệm ngay</div>
+    <h2>Thiết kế người bạn của bạn</h2>
+    <p>Chọn từng chút một — và xem AI của bạn dần hiện hình ✨</p>
+  </div>
+
+  <div class="builder">
+    <div class="wizard reveal">
+      <div class="progress"><span class="on"></span><span></span><span></span><span></span></div>
+
+      <!-- STEP 1 -->
+      <div class="pane active" data-step="1">
+        <h3>1. Danh tính của AI</h3><p class="hint">Đặt tên và chọn một gương mặt — hoặc dùng chính ảnh của bạn.</p>
+        <div class="field"><label class="fl">Tên của người bạn nhỏ</label>
+          <input type="text" id="f-name" placeholder="VD: Miko, Bơ, Nắng, Zu..." maxlength="20"></div>
+        <div class="field"><label class="fl">Chọn avatar — hoặc tải ảnh của riêng bạn lên</label>
+          <div class="swatches" id="avatar-pick"></div>
+          <input type="file" id="f-avatar-file" accept="image/*" style="display:none">
+        </div>
+      </div>
+
+      <!-- STEP 2 -->
+      <div class="pane" data-step="2">
+        <h3>2. Tâm hồn</h3><p class="hint">Người bạn này sẽ trò chuyện với bạn theo cách riêng của "tâm hồn" bạn chọn.</p>
+        <div class="field"><label class="fl">Chọn mẫu tâm hồn</label><div class="arch-grid" id="arch-pick"></div></div>
+        <div class="field" id="custom-traits-field" style="display:none">
+          <label class="fl">Kể về người bạn bạn muốn *</label>
+          <textarea id="f-custom-desc" placeholder="Tự do thôi: tính cách, cách nói chuyện, sở thích, thói quen đáng yêu... VD: hơi lười biếng nhưng tinh tế, hay nhắc mình uống nước, nói chuyện kiểu chị gái cả..."></textarea>
+        </div>
+        <div class="field"><label class="fl">Mô tả thêm (không bắt buộc)</label>
+          <textarea id="f-traits" placeholder="VD: hay nhắc mình uống nước, gọi mình là 'sếp nhỏ', thích dùng emoji mèo..."></textarea></div>
+      </div>
+
+      <!-- STEP 3 -->
+      <div class="pane" data-step="3">
+        <h3>3. Diện mạo & phong cách</h3><p class="hint">Giao diện chat sẽ mang đúng tông màu làm bạn thấy dễ chịu nhất.</p>
+        <div class="field"><label class="fl">Màu chủ đạo</label><div class="swatches" id="color-pick"></div></div>
+        <div class="field"><label class="fl">Kiểu trả lời</label>
+          <div class="seg" id="style-pick">
+            <button data-v="Ngắn gọn, nhẹ nhàng đi vào ý chính" class="sel">🍃 Ngắn gọn</button>
+            <button data-v="Chi tiết, giải thích từ tốn dễ hiểu">📖 Chi tiết</button>
+            <button data-v="Thân mật, ấm áp như bạn bè lâu năm">🤎 Thân mật</button>
+          </div></div>
+        <div class="field"><label class="fl">Mức độ dùng emoji</label>
+          <div class="seg" id="emoji-pick">
+            <button data-v="Không dùng emoji">🚫 Không</button>
+            <button data-v="Dùng emoji vừa phải, nhẹ nhàng" class="sel">🙂 Vừa phải</button>
+            <button data-v="Dùng nhiều emoji, sinh động">🎉 Nhiều</button>
+          </div></div>
+      </div>
+
+      <!-- STEP 4 -->
+      <div class="pane" data-step="4">
+        <h3>4. Gửi người bạn về nhà</h3><p class="hint">Điền thông tin để chúng mình liên hệ và gửi sản phẩm đến tận tay bạn.</p>
+        <div class="field"><label class="fl">Họ tên của bạn *</label><input type="text" id="f-cname" placeholder="Nguyễn Văn A"></div>
+        <div class="field"><label class="fl">Số điện thoại / Zalo *</label><input type="text" id="f-phone" placeholder="09xx xxx xxx"></div>
+        <div class="field"><label class="fl">Email của bạn *</label><input type="email" id="f-email" placeholder="ban@gmail.com"></div>
+        <div class="field"><label class="fl">Địa chỉ nhận hàng *</label><textarea id="f-addr" style="min-height:70px" placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành"></textarea></div>
+        <div class="field">
+          <label class="chk" id="gift-box"><input type="checkbox" id="f-gift">
+            <span>🎁 <b>Hộp quà + thiệp viết tay</b> — ấm áp để tặng một ai đó</span><span class="pr">+30.000đ</span></label>
+          <label class="chk sel" id="schedule-feat"><input type="checkbox" id="f-sched" checked>
+            <span>🗓️ <b>Bộ nhắc lịch & việc cần làm nhẹ nhàng</b></span><span class="pr">Miễn phí</span></label>
+        </div>
+        <div class="price-line"><span>Trợ lý AI cá nhân hóa (USB)</span><span>200.000đ</span></div>
+        <div class="price-line" id="gift-line" style="display:none"><span>Hộp quà + thiệp</span><span>+30.000đ</span></div>
+        <div class="price-line"><span>Phí vận chuyển</span><span style="color:#7FA860">Miễn phí</span></div>
+        <div class="price-line total"><span>Tổng cộng</span><b id="total-price">200.000đ</b></div>
+      </div>
+
+      <div class="wiz-nav">
+        <button class="btn btn-ghost" id="btn-back" disabled>← Quay lại</button>
+        <button class="btn btn-primary" id="btn-next">Tiếp tục →</button>
+        <button class="btn btn-primary" id="btn-submit" style="display:none">🌤 Đặt người bạn của bạn</button>
+      </div>
+    </div>
+
+    <div class="preview reveal">
+      <div class="pv-card">
+        <div class="pv-head" id="pv-head">
+          <div class="pv-ava" id="pv-ava">🌷</div>
+          <div><b id="pv-name">Miko</b><small id="pv-status">● đang được vẽ dần...</small></div>
+        </div>
+        <div class="pv-body" id="pv-body">
+          <div class="pv-bubble ai">Xin chào! Mình đang được "nặn" theo ý bạn đây 😊</div>
+        </div>
+      </div>
+      <div class="pv-note"><span class="live"></span>Xem trước trực tiếp — thay đổi được cập nhật ngay</div>
+    </div>
+  </div>
+</div></section>
+
+<!-- ================= FAQ ================= -->
+<section id="faq" style="background:var(--cream2)"><div class="container" style="max-width:760px">
+  <div class="sec-head reveal"><div class="tag">Giải đáp</div><h2>Những điều bạn muốn biết</h2></div>
+  <div id="faq-list"></div>
+</div></section>
+
+<!-- ================= MODAL ================= -->
+<div class="overlay" id="overlay"><div class="modal">
+  <div class="big">🌤</div><h3>Cảm ơn bạn thật nhiều</h3>
+  <p id="modal-msg">Người bạn nhỏ của bạn đang được chuẩn bị. Chúng mình sẽ liên hệ xác nhận trong vòng <b style="color:var(--ink)">24 giờ</b>.</p>
+  <div class="order-id" id="order-id">MIKO-XXXXXX</div>
+  <p style="font-size:13px;color:var(--ink-soft);margin:-8px 0 18px">💌 Email xác nhận đã được gửi — nếu không thấy trong Hộp thư đến, hãy lục lại thư mục <b>Spam</b> và nhấn "Không phải spam" giúp mình nhé!</p>
+  <button class="btn btn-ghost" id="btn-download">💾 Tải file cấu hình AI</button>
+  <button class="btn btn-primary" onclick="document.getElementById('overlay').classList.remove('show')">Đóng</button>
+</div></div>
+
+<footer><div class="container">
+  <div class="sunset">Bạn không đi một mình nữa. 🌤</div>
+  <b>MikoAI</b> — Người bạn nhỏ trong chiếc USB · Bảo hành 1 năm · Hotline/Zalo: <a href="#">0xx xxxx xxx</a><br>
+  <div class="fine">© 2025 MikoAI. AI chỉ mang tính đồng hành & tham khảo, không thay thế bác sĩ, chuyên gia tâm lý hay tư vấn tài chính.
+  Nếu bạn đang gặp khó khăn về tâm lý, chúng mình luôn khuyến khích bạn tìm đến người có chuyên môn — và tự hào vì bạn đã dám tìm giúp đỡ. 💛</div>
+</div></footer>
+
+<script>
+/* ============ CONFIG — chỉ cần sửa phần này ============ */
+const CONFIG = {
+  WEB3FORMS_KEY: "12080869-9156-4a83-9f9b-7a487c7996d2",   // Lấy miễn phí tại web3forms.com
+  GAS_URL: "https://script.google.com/macros/s/AKfycbxQmYxhGFKSndz0VqMN7o0EKh_KCR2JPql7H7gLHYFjSQxtdabH2iVr0RxsC4hviy9y/exec",
+  CONTACT_EMAIL: "ct4s.teams@gmail.com",
+  BASE_PRICE: 200000, GIFT_PRICE: 30000
+};
+
+/* ============ Dữ liệu lựa chọn ============ */
+const AVATARS=["🌷","🐻","🐱","🐰","🦊","🕊️","🌻","🌙","🍑","⭐"];
+const COLORS=[["Mật ong","#E9A84E"],["Hồng đào","#F0977B"],["Hồng nhạt","#E8A79E"],
+  ["Xanh ngọc dịu","#7FBFAE"],["Xanh trời nhẹ","#7FA8D9"],["Tím oải hương","#A48FD8"],
+  ["Xanh rêu","#93A860"],["Nâu đất","#B08968"]];
+const ARCHETYPES=[
+ {em:"🌷",name:"Người bạn dịu dàng",desc:"Ấm áp, lắng nghe từng chút một",
+  traits:"ấm áp, chu đáo, tinh tế, luôn quan tâm đến cảm xúc của người dùng"},
+ {em:"🐻",name:"Bạn đồng hành thân quen",desc:"Vui tính, dễ mến như bạn cùng phòng",
+  traits:"thân thiện, hài hước nhẹ nhàng, trẻ trung, hay đùa giỡn nhưng luôn đáng tin"},
+ {em:"🧭",name:"Người dẫn đường điềm tĩnh",desc:"Rõ ràng, ngăn nắp, sắp xếp mọi thứ",
+  traits:"điềm tĩnh, logic, súc tích, giỏi sắp xếp và giúp người dùng nhìn rõ việc cần làm"},
+ {em:"🌙",name:"Người bạn an yên",desc:"Êm ái, chữa lành, không vội vàng",
+  traits:"dịu dàng, điềm tĩnh, giỏi an ủi, giọng điệu mang lại sự bình yên và an tâm"},
+ {em:"🌻",name:"Nguồn năng lượng nhỏ",desc:"Luôn cổ vũ bạn hết mình",
+  traits:"nhiệt huyết, tích cực, luôn động viên và truyền năng lượng tích cực cho người dùng"},
+ {em:"📚",name:"Người bạn học tập",desc:"Kiên nhẫn, giải thích dễ hiểu",
+  traits:"kiên nhẫn, có tổ chức, giỏi giải thích khái niệm phức tạp thành đơn giản"},
+ {em:"✨",name:"Tự tạo riêng",desc:"AI đúng theo trí tưởng tượng của bạn",custom:true}];
+const GREETINGS=[
+ "Chào bạn 🌷 Hôm nay bạn thấy thế nào? Mình nghe hết nha.",
+ "Hê lô! Hôm nay có gì vui, kể mình nghe với 🐻",
+ "Xin chào. Hôm nay mình cùng sắp xếp mọi thứ cho gọn gàng nhé.",
+ "Chào bạn... Hôm nay có mệt lắm không? Cứ từ từ, mình ở đây 🌙",
+ "Chào buổi sáng! Hôm nay mình cùng làm điều tuyệt vời nha ☀️",
+ "Sẵn sàng học bài chưa nào? Hôm nay học gì đây ta 📚",
+ "Mình là phiên bản duy nhất, do chính bạn tạo nên ✨ Rất vui được gặp bạn!"];
+const FAQS=[
+ ["AI có cần Internet không?","KHÔNG. Đây là điều tuyệt vời nhất của sản phẩm — toàn bộ trí tuệ AI nằm trong USB và chạy trực tiếp trên máy của bạn. Không WiFi, không 4G vẫn trò chuyện bình thường."],
+ ["Máy của tôi có chạy được không?","Yêu cầu rất nhẹ: máy tính 8GB RAM trở lên, hoặc điện thoại Android 4GB RAM trở lên (từ khoảng 2020). Không cần card đồ họa rời."],
+ ["Những gì tôi nói có bị lưu ở đâu khác không?","Không. Toàn bộ hội thoại được xử lý và lưu ngay trên thiết bị của bạn. Chúng mình không có bất kỳ server nào thu thập dữ liệu người dùng."],
+ ["AI có phán xét mình không?","Không bao giờ. AI được thiết kế để lắng nghe không phán xét, không vội vàng. Nhưng khi cần, AI cũng luôn nhẹ nhàng khuyến khích bạn tìm đến chuyên gia tâm lý — vì bạn xứng đáng được hỗ trợ tốt nhất."],
+ ["Tôi có thể thay đổi tính cách AI sau này không?","Bản cá nhân hóa đầu tiên luôn miễn phí. Chính sách thay đổi sau khi nhận hàng sẽ được thông báo rõ ràng khi chúng mình liên hệ xác nhận đơn."],
+ ["Bảo hành như thế nào?","Trong 12 tháng, mọi lỗi do sản xuất — chúng mình chịu toàn bộ chi phí vận chuyển hai chiều và sửa chữa/thay thế. Đổi mới nếu không khắc phục được."],
+ ["AI có đưa lời khuyên y tế, tài chính không?","AI chỉ mang tính tham khảo và đồng hành, không thay thế bác sĩ, chuyên gia tâm lý hay chuyên gia tài chính. Nguyên tắc này được ghi trực tiếp vào tính cách của AI."]];
+
+/* ============ Trạng thái ============ */
+const state={step:1,avatar:"🌷",customAvatar:null,color:"#E9A84E",arch:0,
+  style:"Ngắn gọn, nhẹ nhàng đi vào ý chính",emoji:"Dùng emoji vừa phải, nhẹ nhàng",gift:false};
+
+/* ============ Validation ============ */
+const V={
+  name:v=>/^[\p{L}][\p{L}\s'.-]{1,49}$/u.test(v)||"Họ tên cần ít nhất 2 ký tự và là chữ cái thật nhé 🙏",
+  phone:v=>{
+    const d=v.replace(/\D/g,"").replace(/^84/,"0");
+    return /^0\d{9}$/.test(d)||"SĐT gồm 10 số bắt đầu bằng 0 (VD: 0901234567) nhé 🙏";
+  },
+  email:v=>/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v)||"Email chưa đúng (VD: ban@gmail.com) nhé 🙏",
+  addr:v=>(v.length>=10&&/[\p{L}]/u.test(v)&&/\d/.test(v))||"Địa chỉ cần cụ thể hơn: số nhà + đường + phường/xã, quận/huyện 🙏"
+};
+function setErr(id,msg){
+  const el=document.getElementById(id),f=el.closest(".field");
+  f.classList.add("err");
+  let m=f.querySelector(".err-msg");
+  if(!m){m=document.createElement("div");m.className="err-msg";f.appendChild(m);}
+  m.textContent=msg;
+}
+function clearErr(id){const f=document.getElementById(id).closest(".field");if(f)f.classList.remove("err");}
+/* tự gắn dòng báo lỗi vào từng ô */
+[["f-cname","name"],["f-phone","phone"],["f-email","email"],["f-addr","addr"]].forEach(([id,k])=>{
+  const el=document.getElementById(id);
+  el.addEventListener("blur",()=>{const v=el.value.trim();if(v){const r=V[k](v);if(r!==true)setErr(id,r);}});
+  el.addEventListener("input",()=>clearErr(id));
+});
+
+/* ============ Bụi vàng bay ============ */
+(function(){const box=document.getElementById("dust");
+for(let i=0;i<14;i++){const s=document.createElement("i");
+  s.style.left=Math.random()*100+"%";
+  s.style.setProperty("--s",(0.5+Math.random()).toFixed(2));
+  s.style.animationDelay=(Math.random()*18)+"s";
+  s.style.animationDuration=(14+Math.random()*14)+"s";
+  box.appendChild(s);}})();
+
+/* ============ Render lựa chọn ============ */
+function renderPicks(){
+  document.getElementById("avatar-pick").innerHTML=
+    `<div class="sw ${state.avatar==="__custom__"?'sel':''} custom-sw" data-a="__custom__" title="Tải ảnh của bạn lên">
+       ${state.customAvatar?`<img src="${state.customAvatar}" alt="Ảnh của bạn">`:`<span class="plus">＋</span>`}
+     </div>`+
+    AVATARS.map(a=>
+    `<div class="sw ${a===state.avatar?'sel':''}" style="background:#FFF6E9;font-size:20px;display:grid;place-items:center" data-a="${a}">${a}</div>`).join("");
+  document.getElementById("color-pick").innerHTML=COLORS.map(([n,c])=>
+    `<div class="sw ${c===state.color?'sel':''}" style="background:${c}" data-c="${c}" title="${n}"></div>`).join("");
+  document.getElementById("arch-pick").innerHTML=ARCHETYPES.map((a,i)=>
+    `<div class="arch ${i===state.arch?'sel':''}" data-i="${i}"><div class="em">${a.em}</div><b>${a.name}</b><small>${a.desc}</small></div>`).join("");
+  document.querySelectorAll("#avatar-pick .sw").forEach(el=>el.onclick=()=>{
+    if(el.dataset.a==="__custom__"){document.getElementById("f-avatar-file").click();return;}
+    state.avatar=el.dataset.a;renderPicks();updatePreview();});
+  document.querySelectorAll("#color-pick .sw").forEach(el=>el.onclick=()=>{state.color=el.dataset.c;renderPicks();updatePreview();});
+  document.querySelectorAll("#arch-pick .arch").forEach(el=>el.onclick=()=>{state.arch=+el.dataset.i;renderPicks();updatePreview();});
+}
+
+/* ============ Upload ảnh avatar (tự crop vuông + nén nhẹ) ============ */
+document.getElementById("f-avatar-file").addEventListener("change",e=>{
+  const file=e.target.files[0]; if(!file)return;
+  if(!file.type.startsWith("image/"))return toast("Hãy chọn một file ảnh nhé 🖼");
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const S=200,cv=document.createElement("canvas");
+      cv.width=S;cv.height=S;
+      const ctx=cv.getContext("2d"),min=Math.min(img.width,img.height);
+      ctx.drawImage(img,(img.width-min)/2,(img.height-min)/2,min,min,0,0,S,S);
+      state.customAvatar=cv.toDataURL("image/jpeg",0.85);
+      state.avatar="__custom__";
+      renderPicks();updatePreview();
+      toast("Ảnh của bạn đã sẵn sàng 💛");
+    };
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  e.target.value="";
+});
+
+/* ============ Seg buttons (kiểu trả lời / emoji) ============ */
+document.querySelectorAll("#style-pick button,#emoji-pick button").forEach(b=>b.onclick=()=>{
+  const g=b.parentElement;g.querySelectorAll("button").forEach(x=>x.classList.remove("sel"));
+  b.classList.add("sel");
+  if(g.id==="style-pick")state.style=b.dataset.v;else state.emoji=b.dataset.v;
+  updatePreview();
+});
+
+/* ============ Preview trực tiếp ============ */
+function updatePreview(){
+  const a=ARCHETYPES[state.arch],name=document.getElementById("f-name").value.trim()||"Miko";
+  const isCustom=!!a.custom;
+  document.getElementById("custom-traits-field").style.display=isCustom?"block":"none";
+  const customDesc=(document.getElementById("f-custom-desc").value||"").trim();
+  document.getElementById("pv-head").style.background=state.color;
+  document.getElementById("pv-name").textContent=name;
+  document.getElementById("pv-ava").innerHTML=
+    (state.avatar==="__custom__"&&state.customAvatar)
+      ?`<img src="${state.customAvatar}" alt="">`:state.avatar;
+  document.getElementById("pv-status").textContent=`● ${a.name} · đang ở đây`;
+  const traitLine=isCustom
+    ?(customDesc?`Tâm hồn mình đang có: <b>${customDesc.slice(0,80)}${customDesc.length>80?"…":""}</b>`
+                :"Hãy kể mình nghe, bạn muốn một người bạn thế nào? ✨")
+    :`Mình sẽ trả lời <b>${state.style.split(",")[0].toLowerCase()}</b> và trò chuyện ${state.emoji.toLowerCase()} — đúng kiểu bạn thích nhất.`;
+  document.getElementById("pv-body").innerHTML=`
+    <div class="pv-bubble ai">${a.em} ${GREETINGS[state.arch]}</div>
+    <div class="pv-bubble ai">${traitLine}</div>
+    <div class="pv-bubble me">Ừ nè, mình thích vậy đó 💛</div>`;
+}
+document.getElementById("f-custom-desc").addEventListener("input",updatePreview);
+
+/* ============ Wizard ============ */
+function showStep(n){
+  state.step=n;
+  document.querySelectorAll(".pane").forEach(p=>p.classList.toggle("active",+p.dataset.step===n));
+  document.querySelectorAll(".progress span").forEach((s,i)=>s.classList.toggle("on",i<n));
+  document.getElementById("btn-back").disabled=n===1;
+  document.getElementById("btn-next").style.display=n===4?"none":"inline-flex";
+  document.getElementById("btn-submit").style.display=n===4?"inline-flex":"none";
+}
+document.getElementById("btn-back").onclick=()=>showStep(state.step-1);
+document.getElementById("btn-next").onclick=()=>{
+  if(state.step===1){
+    const n=document.getElementById("f-name").value.trim();
+    if(!n)return toast("Hãy đặt một cái tên cho người bạn nhỏ nhé 🌷");
+    if(n.length<2)return toast("Tên cần ít nhất 2 ký tự nhé 🌷");
+  }
+  if(state.step===2&&ARCHETYPES[state.arch].custom&&!document.getElementById("f-custom-desc").value.trim())
+    return toast("Hãy mô tả đôi chút về tính cách bạn muốn nhé ✨");
+  showStep(state.step+1);
+};
+document.getElementById("f-gift").onchange=e=>{
+  state.gift=e.target.checked;
+  document.getElementById("gift-box").classList.toggle("sel",state.gift);
+  document.getElementById("gift-line").style.display=state.gift?"flex":"none";
+  document.getElementById("total-price").textContent=
+    (CONFIG.BASE_PRICE+(state.gift?CONFIG.GIFT_PRICE:0)).toLocaleString("vi")+"đ";
+};
+document.getElementById("f-sched").onchange=e=>
+  document.getElementById("schedule-feat").classList.toggle("sel",e.target.checked);
+document.getElementById("f-name").addEventListener("input",updatePreview);
+
+/* ============ Đặt hàng ============ */
+function buildOrder(){
+  const a=ARCHETYPES[state.arch],name=document.getElementById("f-name").value.trim();
+  const extra=document.getElementById("f-traits").value.trim();
+  const customDesc=(document.getElementById("f-custom-desc").value||"").trim();
+  const finalTraits=a.custom
+    ?customDesc+(extra?"; "+extra:"")
+    :a.traits+(extra?"; "+extra:"");
+  const avatarVal=state.avatar==="__custom__"?state.customAvatar:state.avatar;
+
+  const persona={
+    name, avatar:avatarVal,
+    theme:{primary_color:state.color},
+    personality:{
+      traits:finalTraits,
+      speaking_style:state.style+"; "+state.emoji,
+      greeting:GREETINGS[state.arch],
+      boundaries:"Không đưa lời khuyên y tế/tài chính cụ thể; lắng nghe không phán xét; luôn nhẹ nhàng khuyến khích người dùng tìm chuyên gia khi cần."
+    }
+  };
+
+  return {
+    order_id:"MIKO-"+Math.random().toString(36).slice(2,8).toUpperCase(),
+    product:"Trợ lý AI cá nhân hóa USB",
+    total:CONFIG.BASE_PRICE+(state.gift?CONFIG.GIFT_PRICE:0),
+    /* Flattened — Web3Forms in được text, không bị [object Object] */
+    customer_name:document.getElementById("f-cname").value.trim(),
+    customer_phone:document.getElementById("f-phone").value.trim(),
+    customer_email:document.getElementById("f-email").value.trim(),
+    customer_address:document.getElementById("f-addr").value.trim(),
+    gift_box:state.gift?"Có 🎁":"Không",
+    schedule_reminder:document.getElementById("f-sched").checked?"Có":"Không",
+    /* JSON đầy đủ cho dây chuyền sản xuất */
+    persona_json:JSON.stringify(persona,null,2)
+  };
+}
+
+document.getElementById("btn-submit").onclick=async()=>{
+  const o=buildOrder();
+  /* Kiểm tra chặt trước khi gửi */
+  let firstBad=null;
+  [["f-cname","name",o.customer_name],["f-phone","phone",o.customer_phone],
+   ["f-email","email",o.customer_email],["f-addr","addr",o.customer_address]]
+  .forEach(([id,k,val])=>{
+    const r=V[k](val||"");
+    if(r!==true){setErr(id,r);if(!firstBad)firstBad=id;}
+  });
+  if(firstBad){
+    toast("Có vài thông tin cần chỉnh lại nhẹ nhé 🙏");
+    const el=document.getElementById(firstBad);
+    el.scrollIntoView({behavior:"smooth",block:"center"});
+    el.focus();
+    return;
+  }
+  try{
+    const res=await fetch("https://api.web3forms.com/submit",{method:"POST",
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({access_key:CONFIG.WEB3FORMS_KEY,
+        subject:"🌤 Đơn hàng MikoAI mới — "+o.order_id,
+        from_name:"Website MikoAI",
+        replyto:o.customer_email,
+        ...o})});
+    var webOk=res.ok;
+  }catch(e){ var webOk=false; }
+  /* Email cảm ơn cho khách — qua Google Apps Script (miễn phí) */
+  try{
+    await fetch(CONFIG.GAS_URL,{method:"POST",mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(o)});
+  }catch(e){}
+  showSuccess(o,!webOk);
+};
+
+function showSuccess(o,fallback){
+  document.getElementById("order-id").textContent=o.order_id;
+  if(fallback)document.getElementById("modal-msg").innerHTML=
+    "Có vẻ kết nối chậm một chút — bạn <b style='color:var(--ink)'>tải file cấu hình</b> bên dưới và gửi giúp chúng mình qua Zalo nhé!";
+  document.getElementById("btn-download").onclick=()=>{
+    const blob=new Blob([o.persona_json],{type:"application/json"});
+    const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+    a.download="persona_"+o.order_id+".json";a.click();
+  };
+  document.getElementById("overlay").classList.add("show");
+}
+
+/* ============ FAQ + Toast + Reveal ============ */
+document.getElementById("faq-list").innerHTML=FAQS.map(([q,a])=>
+ `<div class="faq-item"><button class="faq-q">${q}<span class="arr">▾</span></button>
+  <div class="faq-a"><p>${a}</p></div></div>`).join("");
+document.querySelectorAll(".faq-q").forEach(b=>b.onclick=()=>{
+  const item=b.parentElement,open=item.classList.contains("open");
+  document.querySelectorAll(".faq-item").forEach(f=>{f.classList.remove("open");f.querySelector(".faq-a").style.maxHeight=null;});
+  if(!open){item.classList.add("open");item.querySelector(".faq-a").style.maxHeight=item.querySelector(".faq-a").scrollHeight+"px";}
+});
+function toast(msg){const t=document.createElement("div");t.className="toast";
+  t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),3200);}
+const io=new IntersectionObserver(es=>es.forEach(e=>{
+  if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}
+}),{threshold:.15});
+document.querySelectorAll(".reveal,.verse").forEach(el=>io.observe(el));
+
+/* init */
+renderPicks();updatePreview();showStep(1);
+</script>
+</body>
+</html>
