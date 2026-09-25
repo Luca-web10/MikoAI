@@ -1,0 +1,30 @@
+THIRD-PARTY NOTICES
+====================
+
+MIKOAI
+
+This project may include or use third-party software, models, libraries,
+or services. Each third-party component remains subject to its applicable
+license and terms.
+
+GEMMA
+-----
+
+Gemma is provided under and subject to the Gemma Terms of Use found at:
+ai.google.dev/gemma/terms
+
+Use of Gemma is subject to the applicable Gemma Prohibited Use Policy and
+applicable laws and regulations.
+
+If a distributed Gemma file has been modified, the relevant modified file
+must carry a prominent notice stating that it has been modified.
+
+The MikoAI project license does not replace, override, or modify the
+applicable Gemma terms.
+
+OTHER THIRD-PARTY COMPONENTS
+----------------------------
+
+Where additional third-party components are included in a MikoAI release,
+their original license notices and applicable terms should be retained and
+made available to recipients as required by those licenses.
